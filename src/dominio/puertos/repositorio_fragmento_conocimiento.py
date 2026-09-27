@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from src.dominio.entidades.fragmento_conocimiento import FragmentoConocimiento
 
@@ -8,6 +9,17 @@ class RepositorioFragmentoConocimiento(ABC):
 
     @abstractmethod
     async def guardar_lote(self, fragmentos: list[FragmentoConocimiento]) -> None: ...
+
+    @abstractmethod
+    async def buscar_por_similitud(
+        self,
+        embedding: list[float],
+        categoria: Optional[str] = None,
+        limite: int = 5,
+    ) -> list[FragmentoConocimiento]:
+        """ADR-004/ASR-15: recuperación por similitud vectorial, restringida
+        a fragmentos activos y, opcionalmente, a una categoría."""
+        ...
 
     @abstractmethod
     async def listar_por_documento(

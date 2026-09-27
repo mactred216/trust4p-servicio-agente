@@ -1,17 +1,23 @@
 from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
+from src.aplicacion.casos_uso.evaluar_diagnostico import EvaluarDiagnostico
 from src.aplicacion.casos_uso.gestionar_base_conocimiento import (
     ActualizarDocumento, CargarDocumento, DesactivarDocumento,
     ListarDocumentos, ReactivarDocumento)
 from src.dominio.puertos.cliente_embeddings import ClienteEmbeddings
+from src.dominio.puertos.cliente_inferencia import ClienteInferencia
 from src.dominio.puertos.extractor_texto import ExtractorTexto
 from src.infraestructura.clientes.cliente_embeddings_vertex_ai import \
     ClienteEmbeddingsVertexAI
+from src.infraestructura.clientes.cliente_inferencia_qwen import \
+    ClienteInferenciaQwen
 from src.infraestructura.clientes.extractor_texto_pdf import ExtractorTextoPDF
 from src.infraestructura.persistencia.conexion import obtener_base_datos
 from src.infraestructura.persistencia.repositorio_mongo_documento_conocimiento import \
     RepositorioMongoDocumentoConocimiento
+from src.infraestructura.persistencia.repositorio_mongo_ejecucion_agente import \
+    RepositorioMongoEjecucionAgente
 from src.infraestructura.persistencia.repositorio_mongo_fragmento_conocimiento import \
     RepositorioMongoFragmentoConocimiento
 from src.infraestructura.persistencia.repositorio_mongo_sesion import \
@@ -98,3 +104,26 @@ def obtener_caso_uso_listar_documentos(
     ),
 ) -> ListarDocumentos:
     return ListarDocumentos(repo_documento)
+
+
+def obtener_repositorio_ejecucion_agente(
+    db: AsyncIOMotorDatabase = Depends(obtener_base_datos),
+) -> RepositorioMongoEjecucionAgente:
+    return RepositorioMongoEjecucionAgente(db)
+
+
+def obtener_cliente_inferencia() -> ClienteInferencia:
+    return ClienteInferenciaQwen()
+
+
+def obtener_caso_uso_evaluar_diagnostico(
+    repo_fragmento: RepositorioMongoFragmentoConocimiento = Depends(
+        obtener_repositorio_fragmento_conocimiento
+    ),
+    embeddings: ClienteEmbeddings = Depends(obtener_cliente_embeddings),
+    inferencia: ClienteInferencia = Depends(obtener_cliente_inferencia),
+    repo_ejecucion: RepositorioMongoEjecucionAgente = Depends(
+        obtener_repositorio_ejecucion_agente
+    ),
+) -> EvaluarDiagnostico:
+    return EvaluarDiagnostico(repo_fragmento, embeddings, inferencia, repo_ejecucion)
