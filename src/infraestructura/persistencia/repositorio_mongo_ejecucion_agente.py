@@ -26,3 +26,27 @@ class RepositorioMongoEjecucionAgente(RepositorioEjecucionAgente):
         resultado = await self._coleccion.insert_one(doc)
         ejecucion.id = str(resultado.inserted_id)
         return ejecucion
+
+    async def listar_por_diagnostico(
+        self, diagnostico_id: str
+    ) -> list[EjecucionAgente]:
+        cursor = self._coleccion.find({"diagnostico_id": diagnostico_id}).sort(
+            "intento", 1
+        )
+        documentos = await cursor.to_list(length=None)
+        return [self._a_entidad(doc) for doc in documentos]
+
+    def _a_entidad(self, doc: dict) -> EjecucionAgente:
+        return EjecucionAgente(
+            id=str(doc["_id"]),
+            diagnostico_id=doc["diagnostico_id"],
+            intento=doc["intento"],
+            peticion=doc["peticion"],
+            fragmentos_recuperados=doc["fragmentos_recuperados"],
+            modelo_lenguaje_id=doc["modelo_lenguaje_id"],
+            version_plantilla_instrucciones=doc["version_plantilla_instrucciones"],
+            estado=doc["estado"],
+            respuesta=doc.get("respuesta"),
+            motivo_fallo=doc.get("motivo_fallo"),
+            creado_en=doc["creado_en"],
+        )

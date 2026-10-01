@@ -38,3 +38,43 @@ async def test_registrar_persiste_los_datos(db):
     assert doc["estado"] == "fallida"
     assert doc["motivo_fallo"] == "esquema inválido"
     assert doc["fragmentos_recuperados"] == ["f1", "f2"]
+
+
+@pytest.mark.asyncio
+async def test_listar_por_diagnostico_ordena_por_intento(db):
+    repo = RepositorioMongoEjecucionAgente(db)
+    fallida = crear_ejecucion_prueba(estado="fallida")
+    fallida.intento = 1
+    exitosa = crear_ejecucion_prueba(estado="exitosa")
+    exitosa.intento = 2
+    # Se registran en orden inverso para confirmar que el orden de la
+    # consulta depende del campo 'intento', no del orden de inserción.
+    await repo.registrar(exitosa)
+    await repo.registrar(fallida)
+
+    ejecuciones = await repo.listar_por_diagnostico("diag-1")
+
+    assert [e.intento for e in ejecuciones] == [1, 2]
+    assert [e.estado for e in ejecuciones] == ["fallida", "exitosa"]
+    assert ejecuciones[1].respuesta == {"sintesis": "..."}
+    assert ejecuciones[0].motivo_fallo == "esquema inválido"
+
+
+@pytest.mark.asyncio
+async def test_listar_por_diagnostico_sin_ejecuciones_devuelve_lista_vacia(db):
+    repo = RepositorioMongoEjecucionAgente(db)
+    assert await repo.listar_por_diagnostico("diag-sin-ejecuciones") == []
+
+
+@pytest.mark.asyncio
+async def test_listar_por_diagnostico_ignora_otros_diagnosticos(db):
+    repo = RepositorioMongoEjecucionAgente(db)
+    await repo.registrar(crear_ejecucion_prueba())
+    otra = crear_ejecucion_prueba()
+    otra.diagnostico_id = "diag-2"
+    await repo.registrar(otra)
+
+    ejecuciones = await repo.listar_por_diagnostico("diag-2")
+
+    assert len(ejecuciones) == 1
+    assert ejecuciones[0].diagnostico_id == "diag-2"

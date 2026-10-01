@@ -1,6 +1,8 @@
 from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
+from src.aplicacion.casos_uso.consultar_ejecuciones_agente import \
+    ConsultarEjecucionesAgente
 from src.aplicacion.casos_uso.evaluar_diagnostico import EvaluarDiagnostico
 from src.aplicacion.casos_uso.gestionar_base_conocimiento import (
     ActualizarDocumento, CargarDocumento, DesactivarDocumento,
@@ -127,3 +129,11 @@ def obtener_caso_uso_evaluar_diagnostico(
     ),
 ) -> EvaluarDiagnostico:
     return EvaluarDiagnostico(repo_fragmento, embeddings, inferencia, repo_ejecucion)
+
+
+def obtener_caso_uso_consultar_ejecuciones_agente(
+    repo_ejecucion: RepositorioMongoEjecucionAgente = Depends(
+        obtener_repositorio_ejecucion_agente
+    ),
+) -> ConsultarEjecucionesAgente:
+    return ConsultarEjecucionesAgente(repo_ejecucion)

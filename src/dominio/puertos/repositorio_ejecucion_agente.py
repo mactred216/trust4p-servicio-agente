@@ -11,3 +11,11 @@ class RepositorioEjecucionAgente(ABC):
 
     @abstractmethod
     async def registrar(self, ejecucion: EjecucionAgente) -> EjecucionAgente: ...
+
+    @abstractmethod
+    async def listar_por_diagnostico(
+        self, diagnostico_id: str
+    ) -> list[EjecucionAgente]:
+        """RF-42: todos los intentos registrados para un diagnóstico, en el
+        orden en que ocurrieron, para que el administrador los revise."""
+        ...
