@@ -1,10 +1,12 @@
 import asyncio
 import os
+import time
 
 from google import genai
 from google.genai import types
 
-from src.dominio.puertos.cliente_inferencia import ClienteInferencia
+from src.dominio.puertos.cliente_inferencia import (ClienteInferencia,
+                                                    ResultadoInferencia)
 
 # El modelo solo está disponible vía el endpoint 'global' de Vertex AI, no
 # en una región regular como us-central1 (confirmado en vivo 2026-09-27:
@@ -39,11 +41,12 @@ class ClienteInferenciaQwen(ClienteInferencia):
             )
         return self._cliente
 
-    async def generar(self, instruccion: str) -> str:
+    async def generar(self, instruccion: str) -> ResultadoInferencia:
         return await asyncio.to_thread(self._generar_sincrono, instruccion)
 
-    def _generar_sincrono(self, instruccion: str) -> str:
+    def _generar_sincrono(self, instruccion: str) -> ResultadoInferencia:
         cliente = self._obtener_cliente()
+        inicio = time.monotonic()
         respuesta = cliente.models.generate_content(
             model=self._modelo,
             contents=instruccion,
@@ -54,4 +57,11 @@ class ClienteInferenciaQwen(ClienteInferencia):
             # no delegando la validación de estructura a la API.
             config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
-        return respuesta.text
+        duracion_ms = int((time.monotonic() - inicio) * 1000)
+        uso = respuesta.usage_metadata
+        return ResultadoInferencia(
+            texto=respuesta.text,
+            tokens_entrada=uso.prompt_token_count if uso else None,
+            tokens_salida=uso.candidates_token_count if uso else None,
+            duracion_ms=duracion_ms,
+        )
