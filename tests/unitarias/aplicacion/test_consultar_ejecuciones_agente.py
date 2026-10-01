@@ -17,8 +17,10 @@ async def test_ejecutar_devuelve_las_ejecuciones_del_diagnostico():
             intento=1,
             peticion={"empresa_id": "emp-1"},
             fragmentos_recuperados=[],
-            modelo_lenguaje_id="qwen3-next-80b-a3b-instruct-maas",
-            version_plantilla_instrucciones="1.0",
+            proveedor="google-vertex-ai",
+            modelo="qwen3-next-80b-a3b-instruct-maas",
+            version_prompt="1.0",
+            modelo_version="1",
             estado="exitosa",
             respuesta={"sintesis": "..."},
         )

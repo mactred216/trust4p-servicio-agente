@@ -7,7 +7,8 @@ from src.dominio.entidades.ejecucion_agente import EjecucionAgente
 from src.dominio.entidades.evaluacion import (RespuestaAgente,
                                               SolicitudEvaluacion)
 from src.dominio.puertos.cliente_embeddings import ClienteEmbeddings
-from src.dominio.puertos.cliente_inferencia import ClienteInferencia
+from src.dominio.puertos.cliente_inferencia import (ClienteInferencia,
+                                                    ResultadoInferencia)
 from src.dominio.puertos.repositorio_ejecucion_agente import \
     RepositorioEjecucionAgente
 from src.dominio.puertos.repositorio_fragmento_conocimiento import \
@@ -17,6 +18,7 @@ from src.dominio.servicios.validador_esquema import (RespuestaAgenteInvalida,
                                                      validar_respuesta_agente)
 
 MAXIMO_INTENTOS = 3
+PROVEEDOR_INFERENCIA = "google-vertex-ai"
 
 
 class EvaluacionFallida(Exception):
@@ -40,13 +42,15 @@ class EvaluarDiagnostico:
         cliente_embeddings: ClienteEmbeddings,
         cliente_inferencia: ClienteInferencia,
         repo_ejecucion: RepositorioEjecucionAgente,
-        modelo_lenguaje_id: str = "qwen3-next-80b-a3b-instruct-maas",
+        modelo: str = "qwen3-next-80b-a3b-instruct-maas",
+        proveedor: str = PROVEEDOR_INFERENCIA,
     ):
         self._fragmentos = repo_fragmento
         self._embeddings = cliente_embeddings
         self._inferencia = cliente_inferencia
         self._ejecuciones = repo_ejecucion
-        self._modelo_lenguaje_id = modelo_lenguaje_id
+        self._modelo = modelo
+        self._proveedor = proveedor
 
     async def ejecutar(self, solicitud: SolicitudEvaluacion) -> RespuestaAgente:
         sanear_solicitud(solicitud)
@@ -63,9 +67,11 @@ class EvaluarDiagnostico:
 
         motivo_fallo = "sin intentos"
         for intento in range(1, MAXIMO_INTENTOS + 1):
+            es_ultimo_intento = intento == MAXIMO_INTENTOS
+            resultado_inferencia: ResultadoInferencia | None = None
             try:
-                texto_respuesta = await self._inferencia.generar(instruccion)
-                datos = json.loads(texto_respuesta)
+                resultado_inferencia = await self._inferencia.generar(instruccion)
+                datos = json.loads(resultado_inferencia.texto)
                 respuesta_agente = validar_respuesta_agente(datos, codigos_dimensiones)
             except (json.JSONDecodeError, RespuestaAgenteInvalida) as e:
                 motivo_fallo = str(e)
@@ -74,8 +80,9 @@ class EvaluarDiagnostico:
                     intento,
                     peticion_auditoria,
                     ids_fragmentos,
-                    estado="fallida",
-                    motivo_fallo=motivo_fallo,
+                    estado="fallida" if es_ultimo_intento else "reintento",
+                    mensaje_error=motivo_fallo,
+                    resultado_inferencia=resultado_inferencia,
                 )
                 continue
             except Exception as e:
@@ -90,8 +97,8 @@ class EvaluarDiagnostico:
                     intento,
                     peticion_auditoria,
                     ids_fragmentos,
-                    estado="fallida",
-                    motivo_fallo=motivo_fallo,
+                    estado="fallida" if es_ultimo_intento else "reintento",
+                    mensaje_error=motivo_fallo,
                 )
                 continue
 
@@ -102,6 +109,7 @@ class EvaluarDiagnostico:
                 ids_fragmentos,
                 estado="exitosa",
                 respuesta=datos,
+                resultado_inferencia=resultado_inferencia,
             )
             return respuesta_agente
 
@@ -117,7 +125,8 @@ class EvaluarDiagnostico:
         ids_fragmentos: list[str],
         estado: str,
         respuesta: dict | None = None,
-        motivo_fallo: str | None = None,
+        mensaje_error: str | None = None,
+        resultado_inferencia: ResultadoInferencia | None = None,
     ) -> None:
         await self._ejecuciones.registrar(
             EjecucionAgente(
@@ -126,10 +135,23 @@ class EvaluarDiagnostico:
                 intento=intento,
                 peticion=peticion_auditoria,
                 fragmentos_recuperados=ids_fragmentos,
-                modelo_lenguaje_id=self._modelo_lenguaje_id,
-                version_plantilla_instrucciones=VERSION_PLANTILLA_INSTRUCCIONES,
+                proveedor=self._proveedor,
+                modelo=self._modelo,
+                version_prompt=VERSION_PLANTILLA_INSTRUCCIONES,
+                modelo_version=solicitud.modelo_version,
                 estado=estado,
                 respuesta=respuesta,
-                motivo_fallo=motivo_fallo,
+                mensaje_error=mensaje_error,
+                tokens_entrada=(
+                    resultado_inferencia.tokens_entrada
+                    if resultado_inferencia
+                    else None
+                ),
+                tokens_salida=(
+                    resultado_inferencia.tokens_salida if resultado_inferencia else None
+                ),
+                duracion_ms=(
+                    resultado_inferencia.duracion_ms if resultado_inferencia else None
+                ),
             )
         )

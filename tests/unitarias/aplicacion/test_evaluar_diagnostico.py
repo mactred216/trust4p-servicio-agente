@@ -10,6 +10,7 @@ from src.dominio.entidades.evaluacion import (DimensionCalculada,
                                               PerfilCulturalCalculado,
                                               ResultadoCalculo,
                                               SolicitudEvaluacion)
+from src.dominio.puertos.cliente_inferencia import ResultadoInferencia
 
 
 def crear_solicitud_prueba() -> SolicitudEvaluacion:
@@ -31,8 +32,14 @@ def crear_solicitud_prueba() -> SolicitudEvaluacion:
     )
 
 
-def crear_respuesta_agente_valida_json() -> str:
-    return json.dumps(
+def crear_resultado_inferencia(texto: str) -> ResultadoInferencia:
+    return ResultadoInferencia(
+        texto=texto, tokens_entrada=120, tokens_salida=80, duracion_ms=950
+    )
+
+
+def crear_respuesta_agente_valida_json() -> ResultadoInferencia:
+    texto = json.dumps(
         {
             "perfil_cultura_descripcion": "Descripción",
             "sintesis": "Síntesis",
@@ -58,6 +65,7 @@ def crear_respuesta_agente_valida_json() -> str:
             ],
         }
     )
+    return crear_resultado_inferencia(texto)
 
 
 def crear_mocks():
@@ -81,14 +89,19 @@ async def test_evaluar_diagnostico_exitoso_a_la_primera():
     assert resultado.sintesis == "Síntesis"
     assert inferencia.generar.call_count == 1
     ejecuciones.registrar.assert_called_once()
-    assert ejecuciones.registrar.call_args[0][0].estado == "exitosa"
+    ejecucion = ejecuciones.registrar.call_args[0][0]
+    assert ejecucion.estado == "exitosa"
+    assert ejecucion.modelo_version == "1"
+    assert ejecucion.tokens_entrada == 120
+    assert ejecucion.tokens_salida == 80
+    assert ejecucion.duracion_ms == 950
 
 
 @pytest.mark.asyncio
 async def test_evaluar_diagnostico_reintenta_ante_json_invalido():
     repo_fragmento, embeddings, inferencia, ejecuciones = crear_mocks()
     inferencia.generar.side_effect = [
-        "esto no es json",
+        crear_resultado_inferencia("esto no es json"),
         crear_respuesta_agente_valida_json(),
     ]
     caso_uso = EvaluarDiagnostico(repo_fragmento, embeddings, inferencia, ejecuciones)
@@ -99,13 +112,13 @@ async def test_evaluar_diagnostico_reintenta_ante_json_invalido():
     assert inferencia.generar.call_count == 2
     assert ejecuciones.registrar.call_count == 2
     estados = [c[0][0].estado for c in ejecuciones.registrar.call_args_list]
-    assert estados == ["fallida", "exitosa"]
+    assert estados == ["reintento", "exitosa"]
 
 
 @pytest.mark.asyncio
 async def test_evaluar_diagnostico_agota_intentos_y_falla():
     repo_fragmento, embeddings, inferencia, ejecuciones = crear_mocks()
-    inferencia.generar.return_value = "siempre invalido"
+    inferencia.generar.return_value = crear_resultado_inferencia("siempre invalido")
     caso_uso = EvaluarDiagnostico(repo_fragmento, embeddings, inferencia, ejecuciones)
 
     with pytest.raises(EvaluacionFallida):
@@ -113,6 +126,8 @@ async def test_evaluar_diagnostico_agota_intentos_y_falla():
 
     assert inferencia.generar.call_count == 3
     assert ejecuciones.registrar.call_count == 3
+    estados = [c[0][0].estado for c in ejecuciones.registrar.call_args_list]
+    assert estados == ["reintento", "reintento", "fallida"]
 
 
 @pytest.mark.asyncio
@@ -133,13 +148,17 @@ async def test_evaluar_diagnostico_reintenta_ante_error_del_proveedor():
     assert resultado.sintesis == "Síntesis"
     assert inferencia.generar.call_count == 2
     estados = [c[0][0].estado for c in ejecuciones.registrar.call_args_list]
-    assert estados == ["fallida", "exitosa"]
+    assert estados == ["reintento", "exitosa"]
+    # Un error del proveedor ocurre antes de obtener tokens/duración.
+    assert ejecuciones.registrar.call_args_list[0][0][0].tokens_entrada is None
 
 
 @pytest.mark.asyncio
 async def test_evaluar_diagnostico_reintenta_ante_esquema_incompleto():
     repo_fragmento, embeddings, inferencia, ejecuciones = crear_mocks()
-    respuesta_incompleta = json.dumps({"sintesis": "solo esto"})
+    respuesta_incompleta = crear_resultado_inferencia(
+        json.dumps({"sintesis": "solo esto"})
+    )
     inferencia.generar.side_effect = [
         respuesta_incompleta,
         crear_respuesta_agente_valida_json(),

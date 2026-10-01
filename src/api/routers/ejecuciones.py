@@ -18,12 +18,17 @@ class EjecucionAgenteResponse(BaseModel):
     intento: int
     peticion: dict[str, Any]
     fragmentos_recuperados: list[str]
-    modelo_lenguaje_id: str
-    version_plantilla_instrucciones: str
+    proveedor: str
+    modelo: str
+    version_prompt: str
+    modelo_version: str
     estado: str
     respuesta: Optional[dict[str, Any]]
-    motivo_fallo: Optional[str]
-    creado_en: datetime
+    mensaje_error: Optional[str]
+    tokens_entrada: Optional[int]
+    tokens_salida: Optional[int]
+    duracion_ms: Optional[int]
+    ejecutado_en: datetime
 
 
 def _a_response(ejecucion) -> EjecucionAgenteResponse:
@@ -33,12 +38,17 @@ def _a_response(ejecucion) -> EjecucionAgenteResponse:
         intento=ejecucion.intento,
         peticion=ejecucion.peticion,
         fragmentos_recuperados=ejecucion.fragmentos_recuperados,
-        modelo_lenguaje_id=ejecucion.modelo_lenguaje_id,
-        version_plantilla_instrucciones=ejecucion.version_plantilla_instrucciones,
+        proveedor=ejecucion.proveedor,
+        modelo=ejecucion.modelo,
+        version_prompt=ejecucion.version_prompt,
+        modelo_version=ejecucion.modelo_version,
         estado=ejecucion.estado,
         respuesta=ejecucion.respuesta,
-        motivo_fallo=ejecucion.motivo_fallo,
-        creado_en=ejecucion.creado_en,
+        mensaje_error=ejecucion.mensaje_error,
+        tokens_entrada=ejecucion.tokens_entrada,
+        tokens_salida=ejecucion.tokens_salida,
+        duracion_ms=ejecucion.duracion_ms,
+        ejecutado_en=ejecucion.ejecutado_en,
     )
 
 
