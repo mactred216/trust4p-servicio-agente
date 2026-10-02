@@ -1,17 +1,14 @@
-import asyncio
 import os
 
-import vertexai
-from vertexai.language_models import TextEmbeddingModel
+from langchain_google_vertexai import VertexAIEmbeddings
 
 from src.dominio.puertos.cliente_embeddings import ClienteEmbeddings
 
 
 class ClienteEmbeddingsVertexAI(ClienteEmbeddings):
-    """Adaptador real hacia el modelo de embeddings de texto de Vertex AI
-    (propio de Google, no requiere Model Garden). No verificado todavía
-    contra el servicio real — pendiente de que exista GOOGLE_APPLICATION
-    _CREDENTIALS / `gcloud auth application-default login` en el entorno."""
+    """Adaptador hacia el modelo de embeddings de texto de Vertex AI,
+    vectorizado a través de LangChain (igual que la carga y fragmentación
+    de documentos de RF-41)."""
 
     def __init__(
         self,
@@ -24,18 +21,16 @@ class ClienteEmbeddingsVertexAI(ClienteEmbeddings):
         self._modelo_nombre = modelo or os.getenv(
             "VERTEX_EMBEDDING_MODEL", "text-embedding-005"
         )
-        self._modelo = None
+        self._cliente: VertexAIEmbeddings | None = None
 
-    def _cargar_modelo(self) -> TextEmbeddingModel:
-        if self._modelo is None:
-            vertexai.init(project=self._project, location=self._location)
-            self._modelo = TextEmbeddingModel.from_pretrained(self._modelo_nombre)
-        return self._modelo
+    def _obtener_cliente(self) -> VertexAIEmbeddings:
+        if self._cliente is None:
+            self._cliente = VertexAIEmbeddings(
+                model_name=self._modelo_nombre,
+                project=self._project,
+                location=self._location,
+            )
+        return self._cliente
 
     async def generar(self, texto: str) -> list[float]:
-        return await asyncio.to_thread(self._generar_sincrono, texto)
-
-    def _generar_sincrono(self, texto: str) -> list[float]:
-        modelo = self._cargar_modelo()
-        resultado = modelo.get_embeddings([texto])
-        return resultado[0].values
+        return await self._obtener_cliente().aembed_query(texto)

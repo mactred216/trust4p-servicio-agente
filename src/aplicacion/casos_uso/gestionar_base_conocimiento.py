@@ -10,20 +10,20 @@ from src.dominio.puertos.repositorio_documento_conocimiento import \
 from src.dominio.puertos.repositorio_fragmento_conocimiento import \
     RepositorioFragmentoConocimiento
 
-# Diccionario de datos (fragmentos_conocimiento.contenido): "extensión
-# aproximada de 200 a 400 unidades léxicas" — se toma el punto medio como
-# tamaño objetivo. La superposición evita perder contexto que quede justo
-# en el límite entre dos fragmentos consecutivos; no está fijada por ningún
-# documento del proyecto, es un valor razonable (~15 %) sujeto a ajuste.
-TAMANO_FRAGMENTO_PALABRAS = 300
-SUPERPOSICION_PALABRAS = 50
+# Fragmentación de 1.600 caracteres con solapamiento de 200 (especificado
+# en el documento del proyecto). El Diccionario de Datos describe el mismo
+# fragmento de forma aproximada en unidades léxicas ("200 a 400"), que es
+# consistente con este tamaño en caracteres para texto en español — no son
+# dos reglas distintas, la del diccionario es una anotación cualitativa de
+# lo que produce esta.
+TAMANO_FRAGMENTO_CARACTERES = 1600
+SUPERPOSICION_CARACTERES = 200
 
 
 def fragmentar_texto(texto: str) -> list[str]:
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=TAMANO_FRAGMENTO_PALABRAS,
-        chunk_overlap=SUPERPOSICION_PALABRAS,
-        length_function=lambda t: len(t.split()),
+        chunk_size=TAMANO_FRAGMENTO_CARACTERES,
+        chunk_overlap=SUPERPOSICION_CARACTERES,
         separators=["\n\n", "\n", ". ", " ", ""],
     )
     return [parte for parte in splitter.split_text(texto) if parte.strip()]

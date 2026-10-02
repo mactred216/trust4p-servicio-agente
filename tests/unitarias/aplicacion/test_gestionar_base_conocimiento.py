@@ -30,11 +30,13 @@ def crear_mocks():
 
 
 def test_fragmentar_texto_respeta_tamano_aproximado():
+    """1.600 caracteres con solapamiento de 200, según lo especificado en
+    el documento del proyecto."""
     texto = " ".join(f"palabra{i}" for i in range(1000)) + "."
     partes = fragmentar_texto(texto)
     assert len(partes) > 1
     for parte in partes:
-        assert len(parte.split()) <= 300
+        assert len(parte) <= 1600
 
 
 def test_fragmentar_texto_vacio_no_produce_fragmentos():
