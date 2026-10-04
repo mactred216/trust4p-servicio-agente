@@ -1,8 +1,10 @@
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.routers import documentos, ejecuciones, evaluaciones
 from src.infraestructura.persistencia.conexion import obtener_base_datos
@@ -26,6 +28,22 @@ async def ciclo_de_vida(app: FastAPI):
 
 app = FastAPI(
     title="Trust 4P - Servicio de Evaluación Asistida", lifespan=ciclo_de_vida
+)
+
+# Integracion con el frontend: origenes explicitos por entorno (la sesion viaja
+# en cookie, por eso allow_credentials y nunca "*").
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        o.strip()
+        for o in os.getenv(
+            "CORS_ORIGENES", "http://localhost:5173,http://localhost:3000"
+        ).split(",")
+        if o.strip()
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type"],
 )
 
 app.include_router(documentos.router, prefix="/v1")
