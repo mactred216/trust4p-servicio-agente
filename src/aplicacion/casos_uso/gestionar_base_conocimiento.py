@@ -33,6 +33,22 @@ class DocumentoNoEncontrado(Exception):
     pass
 
 
+class DocumentoIlegible(ValueError):
+    """El archivo no se pudo leer como PDF (corrupto o con otro contenido)."""
+
+
+def _extraer_texto(extractor: ExtractorTexto, contenido: bytes) -> str:
+    """RNF-07: un archivo corrupto se reporta como error de validacion (422),
+    nunca como un fallo interno, y se detecta antes de guardar nada."""
+    try:
+        texto = extractor.extraer(contenido)
+    except Exception as e:
+        raise DocumentoIlegible("El archivo no es un PDF legible") from e
+    if not texto.strip():
+        raise ValueError("El documento no contiene texto extraíble")
+    return texto
+
+
 async def _generar_y_guardar_fragmentos(
     repo_fragmento: RepositorioFragmentoConocimiento,
     cliente_embeddings: ClienteEmbeddings,
@@ -87,9 +103,7 @@ class CargarDocumento:
                 f"Categoría '{categoria}' inválida; debe ser una de {sorted(CATEGORIAS_VALIDAS)}"
             )
 
-        texto = self._extractor.extraer(contenido_archivo)
-        if not texto.strip():
-            raise ValueError("El documento no contiene texto extraíble")
+        texto = _extraer_texto(self._extractor, contenido_archivo)
 
         documento = DocumentoConocimiento(
             id=None,
@@ -143,9 +157,7 @@ class ActualizarDocumento:
                 f"Categoría '{categoria_nueva}' inválida; debe ser una de {sorted(CATEGORIAS_VALIDAS)}"
             )
 
-        texto = self._extractor.extraer(contenido_archivo)
-        if not texto.strip():
-            raise ValueError("El documento no contiene texto extraíble")
+        texto = _extraer_texto(self._extractor, contenido_archivo)
 
         nuevo = DocumentoConocimiento(
             id=None,
