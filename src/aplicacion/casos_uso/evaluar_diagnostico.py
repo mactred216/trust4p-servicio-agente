@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 from src.aplicacion.compositor_contexto import (
@@ -18,6 +19,12 @@ from src.dominio.servicios.validador_esquema import (RespuestaAgenteInvalida,
                                                      validar_respuesta_agente)
 
 MAXIMO_INTENTOS = 3
+
+# Espera base (segundos) entre reintentos ante un error del proveedor; se duplica
+# en cada intento. Los 429 de Vertex AI suelen ser picos transitorios de
+# concurrencia: reintentar al instante agota los intentos sin darles tiempo
+# de ceder (ASR-02). 0 desactiva la espera (pruebas).
+ESPERA_REINTENTO_SEGUNDOS = 2.0
 PROVEEDOR_INFERENCIA = "google-vertex-ai"
 
 
@@ -44,6 +51,7 @@ class EvaluarDiagnostico:
         repo_ejecucion: RepositorioEjecucionAgente,
         modelo: str = "qwen3-next-80b-a3b-instruct-maas",
         proveedor: str = PROVEEDOR_INFERENCIA,
+        espera_reintento_segundos: float = 0.0,
     ):
         self._fragmentos = repo_fragmento
         self._embeddings = cliente_embeddings
@@ -51,6 +59,7 @@ class EvaluarDiagnostico:
         self._ejecuciones = repo_ejecucion
         self._modelo = modelo
         self._proveedor = proveedor
+        self._espera_reintento = espera_reintento_segundos
 
     async def ejecutar(self, solicitud: SolicitudEvaluacion) -> RespuestaAgente:
         sanear_solicitud(solicitud)
@@ -100,6 +109,8 @@ class EvaluarDiagnostico:
                     estado="fallida" if es_ultimo_intento else "reintento",
                     mensaje_error=motivo_fallo,
                 )
+                if not es_ultimo_intento and self._espera_reintento > 0:
+                    await asyncio.sleep(self._espera_reintento * 2 ** (intento - 1))
                 continue
 
             await self._registrar_intento(
