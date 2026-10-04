@@ -12,7 +12,8 @@ from src.api.dependencias import (obtener_caso_uso_actualizar_documento,
 from src.api.middleware.autorizacion import requiere_rol
 from src.aplicacion.casos_uso.gestionar_base_conocimiento import (
     ActualizarDocumento, CargarDocumento, DesactivarDocumento,
-    DocumentoNoEncontrado, ListarDocumentos, ReactivarDocumento)
+    DocumentoIlegible, DocumentoNoEncontrado, ListarDocumentos,
+    ReactivarDocumento)
 
 router = APIRouter(prefix="/documentos", tags=["documentos"])
 
@@ -78,6 +79,8 @@ async def cargar_documento(
             contenido_archivo=contenido,
             fuente=fuente,
         )
+    except DocumentoIlegible as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return _a_response(documento)
@@ -113,6 +116,8 @@ async def actualizar_documento(
         )
     except DocumentoNoEncontrado:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
+    except DocumentoIlegible as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return _a_response(documento)
@@ -134,6 +139,8 @@ async def desactivar_documento(
         documento = await caso_uso.ejecutar(documento_id)
     except DocumentoNoEncontrado:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
+    except DocumentoIlegible as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return _a_response(documento)
@@ -153,6 +160,8 @@ async def reactivar_documento(
         documento = await caso_uso.ejecutar(documento_id)
     except DocumentoNoEncontrado:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
+    except DocumentoIlegible as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return _a_response(documento)

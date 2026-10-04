@@ -1,9 +1,12 @@
+import os
+
 from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from src.aplicacion.casos_uso.consultar_ejecuciones_agente import \
     ConsultarEjecucionesAgente
-from src.aplicacion.casos_uso.evaluar_diagnostico import EvaluarDiagnostico
+from src.aplicacion.casos_uso.evaluar_diagnostico import (
+    ESPERA_REINTENTO_SEGUNDOS, EvaluarDiagnostico)
 from src.aplicacion.casos_uso.gestionar_base_conocimiento import (
     ActualizarDocumento, CargarDocumento, DesactivarDocumento,
     ListarDocumentos, ReactivarDocumento)
@@ -128,7 +131,15 @@ def obtener_caso_uso_evaluar_diagnostico(
         obtener_repositorio_ejecucion_agente
     ),
 ) -> EvaluarDiagnostico:
-    return EvaluarDiagnostico(repo_fragmento, embeddings, inferencia, repo_ejecucion)
+    return EvaluarDiagnostico(
+        repo_fragmento,
+        embeddings,
+        inferencia,
+        repo_ejecucion,
+        espera_reintento_segundos=float(
+            os.getenv("ESPERA_REINTENTO_SEGUNDOS", ESPERA_REINTENTO_SEGUNDOS)
+        ),
+    )
 
 
 def obtener_caso_uso_consultar_ejecuciones_agente(
