@@ -50,8 +50,9 @@ async def recuperar_contexto(
 ) -> list[FragmentoConocimiento]:
     """RF-36/Tabla 17: recupera, por similitud, el material de la base de
     conocimiento — perfiles de cultura relevantes al código determinado,
-    criterios de valoración priorizando las dimensiones de menor puntaje, y
-    ejemplos de diagnósticos calificados con un perfil similar."""
+    criterios de valoración priorizando las dimensiones de menor puntaje,
+    ejemplos de diagnósticos calificados con un perfil similar, descripciones
+    de las dimensiones y marco teórico."""
     fragmentos: list[FragmentoConocimiento] = []
     vistos: set[str] = set()
 
@@ -100,6 +101,37 @@ async def recuperar_contexto(
         await repo_fragmento.buscar_por_similitud(
             embedding_ejemplos,
             categoria="ejemplos",
+            limite=LIMITE_FRAGMENTOS_POR_CATEGORIA,
+        )
+    )
+
+    # RF-41: las cinco categorias de la base de conocimiento participan. Las
+    # descripciones de las dimensiones se buscan con los nombres vigentes del
+    # modelo (el administrador puede agregarlas o renombrarlas) y el marco
+    # teorico da el contexto conceptual general.
+    nombres_dimensiones = ", ".join(
+        d.nombre for d in sorted(solicitud.dimensiones_modelo, key=lambda d: d.orden)
+    )
+    consulta_dimensiones = (
+        f"Descripción de las dimensiones del modelo de madurez: {nombres_dimensiones}"
+    )
+    embedding_dimensiones = await cliente_embeddings.generar(consulta_dimensiones)
+    _agregar(
+        await repo_fragmento.buscar_por_similitud(
+            embedding_dimensiones,
+            categoria="dimensiones",
+            limite=LIMITE_FRAGMENTOS_POR_CATEGORIA,
+        )
+    )
+
+    consulta_marco = (
+        "Marco teórico de la madurez de innovación y la cultura organizacional"
+    )
+    embedding_marco = await cliente_embeddings.generar(consulta_marco)
+    _agregar(
+        await repo_fragmento.buscar_por_similitud(
+            embedding_marco,
+            categoria="marco_teorico",
             limite=LIMITE_FRAGMENTOS_POR_CATEGORIA,
         )
     )
