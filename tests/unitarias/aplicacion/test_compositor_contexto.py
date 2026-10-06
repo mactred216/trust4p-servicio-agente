@@ -78,7 +78,13 @@ async def test_recuperar_contexto_llama_al_repositorio_por_categoria():
         c.kwargs["categoria"]
         for c in repo_fragmento.buscar_por_similitud.call_args_list
     ]
-    assert categorias_consultadas == ["perfiles_cultura", "rubrica", "ejemplos"]
+    assert categorias_consultadas == [
+        "perfiles_cultura",
+        "rubrica",
+        "ejemplos",
+        "dimensiones",
+        "marco_teorico",
+    ]
     assert len(fragmentos) > 0
 
 
@@ -139,3 +145,21 @@ def test_construir_peticion_auditoria_trunca_fragmentos():
 
     assert len(peticion["fragmentos_extracto"][0]["extracto"]) <= 120
     assert "empresa_id" in peticion
+
+
+@pytest.mark.asyncio
+async def test_la_consulta_de_dimensiones_usa_los_nombres_vigentes_del_modelo():
+    solicitud = crear_solicitud_prueba()
+    repo_fragmento = AsyncMock()
+    repo_fragmento.buscar_por_similitud.return_value = []
+    cliente_embeddings = AsyncMock()
+    cliente_embeddings.generar.return_value = [0.1]
+
+    await recuperar_contexto(solicitud, repo_fragmento, cliente_embeddings)
+
+    consultas = [c.args[0] for c in cliente_embeddings.generar.call_args_list]
+    consulta = next(
+        c for c in consultas if c.startswith("Descripción de las dimensiones")
+    )
+    for dimension in solicitud.dimensiones_modelo:
+        assert dimension.nombre in consulta
