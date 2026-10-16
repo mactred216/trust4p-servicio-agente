@@ -20,12 +20,28 @@ from src.dominio.servicios.validador_esquema import (RespuestaAgenteInvalida,
 
 MAXIMO_INTENTOS = 3
 
+# Un límite de tasa del proveedor (429 RESOURCE_EXHAUSTED) no es una petición
+# mal formada sino una petición que llegó temprano: la capacidad compartida de
+# Vertex AI tarda en ceder mucho más que los pocos segundos que bastan ante un
+# error de red. Por eso a ese caso, y solo a ese, se le conceden más intentos y
+# esperas más largas; con la espera base de 2 s la secuencia es 8, 16, 32 y 64
+# segundos, que cabe holgadamente en el plazo de 300 s del cliente de la API.
+MAXIMO_INTENTOS_LIMITE_TASA = 5
+FACTOR_ESPERA_LIMITE_TASA = 4.0
+
 # Espera base (segundos) entre reintentos ante un error del proveedor; se duplica
 # en cada intento. Los 429 de Vertex AI suelen ser picos transitorios de
 # concurrencia: reintentar al instante agota los intentos sin darles tiempo
 # de ceder (ASR-02). 0 desactiva la espera (pruebas).
 ESPERA_REINTENTO_SEGUNDOS = 2.0
 PROVEEDOR_INFERENCIA = "google-vertex-ai"
+
+
+def _es_limite_de_tasa(error: Exception) -> bool:
+    """Reconoce el 429 del proveedor por su mensaje, sin acoplar el caso de
+    uso al SDK concreto que lo produce (ADR-002)."""
+    texto = str(error).upper()
+    return "429" in texto or "RESOURCE_EXHAUSTED" in texto
 
 
 class EvaluacionFallida(Exception):
@@ -75,8 +91,11 @@ class EvaluarDiagnostico:
         ids_fragmentos = [f.id for f in fragmentos if f.id is not None]
 
         motivo_fallo = "sin intentos"
-        for intento in range(1, MAXIMO_INTENTOS + 1):
-            es_ultimo_intento = intento == MAXIMO_INTENTOS
+        limite_intentos = MAXIMO_INTENTOS
+        intento = 0
+        while intento < limite_intentos:
+            intento += 1
+            es_ultimo_intento = intento == limite_intentos
             resultado_inferencia: ResultadoInferencia | None = None
             try:
                 resultado_inferencia = await self._inferencia.generar(instruccion)
@@ -101,6 +120,12 @@ class EvaluarDiagnostico:
                 # marcar el diagnóstico como fallido, nunca se propaga como
                 # un error 500 sin más.
                 motivo_fallo = f"Error del proveedor de inferencia: {e}"
+                if _es_limite_de_tasa(e):
+                    limite_intentos = MAXIMO_INTENTOS_LIMITE_TASA
+                    factor_espera = FACTOR_ESPERA_LIMITE_TASA
+                else:
+                    factor_espera = 1.0
+                es_ultimo_intento = intento == limite_intentos
                 await self._registrar_intento(
                     solicitud,
                     intento,
@@ -110,7 +135,9 @@ class EvaluarDiagnostico:
                     mensaje_error=motivo_fallo,
                 )
                 if not es_ultimo_intento and self._espera_reintento > 0:
-                    await asyncio.sleep(self._espera_reintento * 2 ** (intento - 1))
+                    await asyncio.sleep(
+                        self._espera_reintento * factor_espera * 2 ** (intento - 1)
+                    )
                 continue
 
             await self._registrar_intento(
@@ -125,7 +152,7 @@ class EvaluarDiagnostico:
             return respuesta_agente
 
         raise EvaluacionFallida(
-            f"Se agotaron los {MAXIMO_INTENTOS} intentos: {motivo_fallo}"
+            f"Se agotaron los {limite_intentos} intentos: {motivo_fallo}"
         )
 
     async def _registrar_intento(
