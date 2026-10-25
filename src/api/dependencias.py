@@ -15,8 +15,8 @@ from src.dominio.puertos.cliente_inferencia import ClienteInferencia
 from src.dominio.puertos.extractor_texto import ExtractorTexto
 from src.infraestructura.clientes.cliente_embeddings_vertex_ai import \
     ClienteEmbeddingsVertexAI
-from src.infraestructura.clientes.cliente_inferencia_vertex import (
-    ClienteInferenciaVertex)
+from src.infraestructura.clientes.cliente_inferencia_vertex import \
+    ClienteInferenciaVertex
 from src.infraestructura.clientes.extractor_texto_pdf import ExtractorTextoPDF
 from src.infraestructura.persistencia.conexion import obtener_base_datos
 from src.infraestructura.persistencia.repositorio_mongo_documento_conocimiento import \
