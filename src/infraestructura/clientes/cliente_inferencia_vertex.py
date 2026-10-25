@@ -8,20 +8,21 @@ from google.genai import types
 from src.dominio.puertos.cliente_inferencia import (ClienteInferencia,
                                                     ResultadoInferencia)
 
-# El modelo solo está disponible vía el endpoint 'global' de Vertex AI, no
-# en una región regular como us-central1 (confirmado en vivo 2026-09-27:
-# 'Publisher model ... is not available in region us-central1' / 'only
-# available via global endpoint' contra us-east5) — distinto de la región
-# usada para el modelo de embeddings.
-MODELO_POR_DEFECTO = "publishers/qwen/models/qwen3-next-80b-a3b-instruct-maas"
+# El modelo se sirve como servicio gestionado de Vertex AI por el endpoint
+# 'global'. Qwen3-Next-80B-Instruct (ADR-007) dejó de existir el 21-oct-2026,
+# cuando Google retiró los cuatro endpoints gestionados de Qwen (deprecación
+# del 21-jul-2026): desde entonces la API respondía 404 «Publisher model ...
+# was not found» y toda evaluación quedaba fallida. Lo sustituye gpt-oss-120b,
+# también de pesos abiertos (ADR-021). El identificador sigue siendo
+# configurable con VERTEX_INFERENCE_MODEL.
+MODELO_POR_DEFECTO = "publishers/openai/models/gpt-oss-120b-maas"
 
 
-class ClienteInferenciaQwen(ClienteInferencia):
-    """Adaptador real hacia Qwen3-Next-80B-Instruct como servicio gestionado
-    de Vertex AI (ADR-007). Usa el SDK unificado google-genai — el SDK
-    vertexai.generative_models funciona pero está deprecado (aviso de
-    retiro para el 24 de junio de 2026, ya vencido en la fecha de esta
-    sesión) y no debía usarse para código nuevo."""
+class ClienteInferenciaVertex(ClienteInferencia):
+    """Adaptador real hacia un modelo de lenguaje de pesos abiertos servido
+    como servicio gestionado de Vertex AI (ADR-007, ADR-021). Usa el SDK
+    unificado google-genai — el SDK vertexai.generative_models está
+    deprecado y no debía usarse para código nuevo."""
 
     def __init__(
         self,
@@ -33,6 +34,12 @@ class ClienteInferenciaQwen(ClienteInferencia):
         self._location = location or os.getenv("GCP_INFERENCIA_REGION", "global")
         self._modelo = modelo or os.getenv("VERTEX_INFERENCE_MODEL", MODELO_POR_DEFECTO)
         self._cliente = None
+
+    @property
+    def nombre_modelo(self) -> str:
+        """Identificador corto del modelo, tal como se registra en la bitácora
+        de ejecuciones (p. ej. «gpt-oss-120b-maas»)."""
+        return self._modelo.split("/models/")[-1]
 
     def _obtener_cliente(self) -> genai.Client:
         if self._cliente is None:
@@ -50,12 +57,11 @@ class ClienteInferenciaQwen(ClienteInferencia):
         respuesta = cliente.models.generate_content(
             model=self._modelo,
             contents=instruccion,
-            # Nota: se confirmó en vivo que este modelo NO respeta
-            # response_schema (devuelve JSON con claves distintas a las
-            # pedidas) — el formato JSON se exige en el texto de la
-            # instrucción, y RF-38 valida el resultado en el propio código,
-            # no delegando la validación de estructura a la API.
-            config=types.GenerateContentConfig(response_mime_type="application/json"),
+            # El formato JSON se exige en el texto de la instrucción y RF-38
+            # valida el resultado en el propio código. No se fuerza
+            # response_mime_type: gpt-oss-120b lo trata de forma errática
+            # (comprobado en vivo el 25-oct-2026, a veces devolvía basura) y
+            # tampoco se delega a la API la validación de la estructura.
         )
         duracion_ms = int((time.monotonic() - inicio) * 1000)
         uso = respuesta.usage_metadata

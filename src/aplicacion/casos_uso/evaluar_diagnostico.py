@@ -65,7 +65,7 @@ class EvaluarDiagnostico:
         cliente_embeddings: ClienteEmbeddings,
         cliente_inferencia: ClienteInferencia,
         repo_ejecucion: RepositorioEjecucionAgente,
-        modelo: str = "qwen3-next-80b-a3b-instruct-maas",
+        modelo: str = "gpt-oss-120b-maas",
         proveedor: str = PROVEEDOR_INFERENCIA,
         espera_reintento_segundos: float = 0.0,
     ):
