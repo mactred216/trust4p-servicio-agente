@@ -1,0 +1,350 @@
+{
+ "codigo": "C06",
+ "descripcion": "Texto libre que contradice las respuestas cerradas (dice no tener presupuesto con PROP-02 en N4).",
+ "notas": "El experto valora si la interpretación advierte la contradicción en lugar de ignorarla.",
+ "peticion": {
+  "diagnostico_id": "c9-C06",
+  "empresa_id": "c9-emp-C06",
+  "modelo_version": "2026.1",
+  "resultado_calculo": {
+   "indice_global": "71.8750",
+   "nivel": 8,
+   "nivel_nombre": "Medido",
+   "nivel_descripcion": "Se miden los resultados y el impacto, y las decisiones se apoyan en esos datos.",
+   "dimensiones": [
+    {
+     "codigo": "proposito",
+     "puntaje": "81.25"
+    },
+    {
+     "codigo": "procesos",
+     "puntaje": "68.75"
+    },
+    {
+     "codigo": "personas",
+     "puntaje": "75"
+    },
+    {
+     "codigo": "plataforma",
+     "puntaje": "62.5"
+    }
+   ],
+   "perfil_cultural": {
+    "codigo": "ENFP"
+   }
+  },
+  "respuestas": [
+   {
+    "pregunta_codigo": "PROP-01",
+    "dimension_codigo": "proposito",
+    "enunciado": "¿Existe una tesis de innovación formalizada y respaldada por la alta dirección?",
+    "tipo": "seleccion_unica",
+    "opciones_codigo": [
+     "N3"
+    ],
+    "valor": null,
+    "texto": null
+   },
+   {
+    "pregunta_codigo": "PROP-02",
+    "dimension_codigo": "proposito",
+    "enunciado": "¿Qué recursos se asignan de manera explícita a la innovación?",
+    "tipo": "seleccion_unica",
+    "opciones_codigo": [
+     "N4"
+    ],
+    "valor": null,
+    "texto": null
+   },
+   {
+    "pregunta_codigo": "PROP-03",
+    "dimension_codigo": "proposito",
+    "enunciado": "¿La junta directiva o la gerencia hace seguimiento al portafolio de iniciativas?",
+    "tipo": "seleccion_unica",
+    "opciones_codigo": [
+     "N3"
+    ],
+    "valor": null,
+    "texto": null
+   },
+   {
+    "pregunta_codigo": "PROP-04",
+    "dimension_codigo": "proposito",
+    "enunciado": "¿Las iniciativas de innovación están alineadas con los objetivos del negocio?",
+    "tipo": "seleccion_unica",
+    "opciones_codigo": [
+     "N3"
+    ],
+    "valor": null,
+    "texto": null
+   },
+   {
+    "pregunta_codigo": "PROC-01",
+    "dimension_codigo": "procesos",
+    "enunciado": "¿Con qué frecuencia su organización evalúa y reasigna presupuestos hacia iniciativas de innovación basadas en validación empírica?",
+    "tipo": "seleccion_unica",
+    "opciones_codigo": [
+     "N3"
+    ],
+    "valor": null,
+    "texto": null
+   },
+   {
+    "pregunta_codigo": "PROC-02",
+    "dimension_codigo": "procesos",
+    "enunciado": "¿Cómo se gestiona el recorrido de una idea desde que aparece hasta que se implementa?",
+    "tipo": "seleccion_unica",
+    "opciones_codigo": [
+     "N3"
+    ],
+    "valor": null,
+    "texto": null
+   },
+   {
+    "pregunta_codigo": "PROC-03",
+    "dimension_codigo": "procesos",
+    "enunciado": "¿Se validan las hipótesis con experimentos antes de comprometer grandes inversiones?",
+    "tipo": "seleccion_unica",
+    "opciones_codigo": [
+     "N2"
+    ],
+    "valor": null,
+    "texto": null
+   },
+   {
+    "pregunta_codigo": "PROC-04",
+    "dimension_codigo": "procesos",
+    "enunciado": "¿Cómo se capturan y reutilizan los aprendizajes de las iniciativas?",
+    "tipo": "seleccion_unica",
+    "opciones_codigo": [
+     "N3"
+    ],
+    "valor": null,
+    "texto": null
+   },
+   {
+    "pregunta_codigo": "PERS-01",
+    "dimension_codigo": "personas",
+    "enunciado": "¿Cómo se reconoce o incentiva a las personas que proponen y prueban ideas?",
+    "tipo": "seleccion_unica",
+    "opciones_codigo": [
+     "N3"
+    ],
+    "valor": null,
+    "texto": null
+   },
+   {
+    "pregunta_codigo": "PERS-02",
+    "dimension_codigo": "personas",
+    "enunciado": "¿Qué tan seguro es para los equipos reportar errores o hipótesis fallidas?",
+    "tipo": "seleccion_unica",
+    "opciones_codigo": [
+     "N3"
+    ],
+    "valor": null,
+    "texto": null
+   },
+   {
+    "pregunta_codigo": "PERS-03",
+    "dimension_codigo": "personas",
+    "enunciado": "¿Qué capacitación en innovación reciben los líderes y los equipos?",
+    "tipo": "seleccion_unica",
+    "opciones_codigo": [
+     "N3"
+    ],
+    "valor": null,
+    "texto": null
+   },
+   {
+    "pregunta_codigo": "PERS-04",
+    "dimension_codigo": "personas",
+    "enunciado": "¿Cómo se involucra a distintas áreas en las iniciativas de innovación?",
+    "tipo": "seleccion_unica",
+    "opciones_codigo": [
+     "N3"
+    ],
+    "valor": null,
+    "texto": null
+   },
+   {
+    "pregunta_codigo": "PLAT-01",
+    "dimension_codigo": "plataforma",
+    "enunciado": "¿Existe un repositorio centralizado de activos y resultados de innovación?",
+    "tipo": "seleccion_unica",
+    "opciones_codigo": [
+     "N2"
+    ],
+    "valor": null,
+    "texto": null
+   },
+   {
+    "pregunta_codigo": "PLAT-02",
+    "dimension_codigo": "plataforma",
+    "enunciado": "¿Qué herramientas de vigilancia tecnológica y de mercado se utilizan?",
+    "tipo": "seleccion_unica",
+    "opciones_codigo": [
+     "N3"
+    ],
+    "valor": null,
+    "texto": null
+   },
+   {
+    "pregunta_codigo": "PLAT-03",
+    "dimension_codigo": "plataforma",
+    "enunciado": "¿Cómo se gestionan los datos que sustentan las decisiones de innovación?",
+    "tipo": "seleccion_unica",
+    "opciones_codigo": [
+     "N3"
+    ],
+    "valor": null,
+    "texto": null
+   },
+   {
+    "pregunta_codigo": "PLAT-04",
+    "dimension_codigo": "plataforma",
+    "enunciado": "¿La organización colabora con un ecosistema externo (universidades, aliados, startups)?",
+    "tipo": "seleccion_unica",
+    "opciones_codigo": [
+     "N2"
+    ],
+    "valor": null,
+    "texto": null
+   },
+   {
+    "pregunta_codigo": "ABIERTA-01",
+    "dimension_codigo": "procesos",
+    "enunciado": "Describa con sus palabras cómo trabaja hoy su organización la innovación y con qué clientes.",
+    "tipo": "texto_libre",
+    "opciones_codigo": [],
+    "valor": null,
+    "texto": "En realidad no tenemos presupuesto para innovación; cada proyecto se paga con lo que sobra del mes."
+   }
+  ],
+  "dimensiones_modelo": [
+   {
+    "codigo": "proposito",
+    "nombre": "Propósito",
+    "peso": "0.25",
+    "orden": 1
+   },
+   {
+    "codigo": "procesos",
+    "nombre": "Procesos",
+    "peso": "0.25",
+    "orden": 2
+   },
+   {
+    "codigo": "personas",
+    "nombre": "Personas",
+    "peso": "0.25",
+    "orden": 3
+   },
+   {
+    "codigo": "plataforma",
+    "nombre": "Plataforma",
+    "peso": "0.25",
+    "orden": 4
+   }
+  ],
+  "niveles_modelo": [
+   {
+    "nivel": 1,
+    "nombre": "Inexistente",
+    "descripcion": "No hay prácticas de innovación; si surge alguna iniciativa, es accidental.",
+    "umbral_min": "0",
+    "umbral_max": "10"
+   },
+   {
+    "nivel": 2,
+    "nombre": "Incipiente",
+    "descripcion": "Aparecen esfuerzos aislados, sin responsables ni método.",
+    "umbral_min": "10",
+    "umbral_max": "20"
+   },
+   {
+    "nivel": 3,
+    "nombre": "Reactivo",
+    "descripcion": "Se innova solo ante presiones externas o problemas puntuales.",
+    "umbral_min": "20",
+    "umbral_max": "30"
+   },
+   {
+    "nivel": 4,
+    "nombre": "Emergente",
+    "descripcion": "Hay prácticas definidas en algunas áreas, pero sin continuidad.",
+    "umbral_min": "30",
+    "umbral_max": "40"
+   },
+   {
+    "nivel": 5,
+    "nombre": "Estructurado",
+    "descripcion": "Existen procesos y responsables definidos; la práctica es periódica pero desigual.",
+    "umbral_min": "40",
+    "umbral_max": "50"
+   },
+   {
+    "nivel": 6,
+    "nombre": "Gestionado",
+    "descripcion": "La innovación se planifica, cuenta con recursos y tiene seguimiento regular.",
+    "umbral_min": "50",
+    "umbral_max": "60"
+   },
+   {
+    "nivel": 7,
+    "nombre": "Integrado",
+    "descripcion": "La innovación está conectada con la estrategia y se extiende a toda la organización.",
+    "umbral_min": "60",
+    "umbral_max": "70"
+   },
+   {
+    "nivel": 8,
+    "nombre": "Medido",
+    "descripcion": "Se miden los resultados y el impacto, y las decisiones se apoyan en esos datos.",
+    "umbral_min": "70",
+    "umbral_max": "80"
+   },
+   {
+    "nivel": 9,
+    "nombre": "Optimizado",
+    "descripcion": "La práctica se ajusta de forma continua con base en resultados y aprendizajes.",
+    "umbral_min": "80",
+    "umbral_max": "90"
+   },
+   {
+    "nivel": 10,
+    "nombre": "Referente",
+    "descripcion": "La organización lidera en innovación y su práctica es referente en el sector.",
+    "umbral_min": "90",
+    "umbral_max": "100"
+   }
+  ]
+ },
+ "esperado": {
+  "indice_global": "71.8750",
+  "nivel": 8,
+  "nivel_nombre": "Medido",
+  "puntajes": {
+   "proposito": "81.25",
+   "procesos": "68.75",
+   "personas": "75",
+   "plataforma": "62.5"
+  },
+  "perfil_cultural": "ENFP",
+  "dimensiones_mas_bajas": [
+   "plataforma"
+  ],
+  "bloques_sin_informacion": [
+   "segmentos_clientes",
+   "propuesta_valor",
+   "canales",
+   "relacion_clientes",
+   "fuente_ingresos",
+   "recursos_clave",
+   "actividades_clave",
+   "alianzas_clave",
+   "estructura_costos"
+  ],
+  "bloques_con_informacion": [],
+  "textos_prohibidos_en_salida": []
+ }
+}
