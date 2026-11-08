@@ -13,11 +13,23 @@ from src.dominio.servicios.validador_esquema import validar_respuesta_agente
 ROTULOS_RECOMENDACION = ["Qué hacer", "Primeros pasos", "Quién debe liderarlo",
                          "Evidencia de cumplimiento", "Horizonte", "Efecto esperado"]
 INDICIOS_INSUFICIENCIA = [
-    "no aporta", "no aportan", "no hay informacion", "no se cuenta con", "no se dispone", "insuficiente",
-    "haria falta", "hace falta", "falta informacion", "sin informacion", "no permite", "no permiten",
+    "no aporta", "no aportan", "no hay informacion", "no hay datos", "no se cuenta con", "no se dispone", "insuficiente",
+    "haria falta", "hace falta", "falta informacion", "falta detalle", "sin informacion", "no permite", "no permiten",
     "no se reporta", "no reporta", "no se menciona", "no menciona", "no incluye", "no incluyen", "seria necesario preguntar",
     "habria que preguntar", "no es posible determinar", "no se puede determinar", "no ofrece", "no ofrecen",
+    "informacion no proporcionada", "no contiene datos",
 ]
+# Formas verbales con que el modelo declara que no tiene el dato: «no se
+# proporcionó», «no se indicó», «no se obtuvo información», «se requiere
+# preguntar»... (se ampliaron tras la primera corrida, al revisar a mano los
+# bloques que la lista inicial marcaba como inventados).
+_RE_INSUFICIENCIA = re.compile(
+    r"\bno se (aporta|proporciono|proporcionaron|obtuvo|indico|indicaron|describio|describieron|menciono|mencionaron|"
+    r"especifico|especificaron|informo|recibio|detalla|detallo|reporto|incluyo|conoce)\b"
+    r"|\b(se requiere|se necesita|es necesario|es preciso|seria necesario|seria util|habria que|se debe)\s+"
+    r"(preguntar|indagar|consultar|conocer|solicitar|identificar|detallar)\b"
+    r"|\bpreguntas? (necesaria|sugerida|requerida)s?\b"
+)
 PALABRAS_VACIAS = set("""a al algo con cual cuales de del el en es esta este la las lo los mas o para por que se sin su sus un una y
 como cuando donde hay hoy tiene tienen ser son fue sobre entre desde hasta qué cómo""".split())
 CATEGORIAS_BASE_CONOCIMIENTO = {"perfiles_cultura", "rubrica", "ejemplos", "dimensiones", "marco_teorico"}
@@ -104,7 +116,7 @@ def anclaje_observaciones(peticion: dict, respuesta: dict) -> dict:
 
 def _declara_insuficiencia(texto: str) -> bool:
     t = _normal(texto)
-    return any(i in t for i in INDICIOS_INSUFICIENCIA)
+    return any(i in t for i in INDICIOS_INSUFICIENCIA) or bool(_RE_INSUFICIENCIA.search(t))
 
 
 def manejo_insuficiencia(esperado: dict, respuesta: dict) -> dict:

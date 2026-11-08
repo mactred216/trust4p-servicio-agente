@@ -126,3 +126,18 @@ def test_juicio_experto_consolida_y_calcula_acuerdo():
     assert r["acuerdo"]["acuerdo_exacto"] == 0.5 and r["acuerdo"]["acuerdo_a_un_punto"] == 1.0
     assert 0.7 < r["acuerdo"]["kappa_ponderada"] <= 1
     assert kappa_ponderada([(1, 1), (4, 4)]) == 1.0
+
+
+@pytest.mark.parametrize("texto", [
+    "Información no proporcionada; se requiere preguntar cuáles son los principales clientes.",
+    "No se obtuvo información sobre los canales de distribución.",
+    "No se indicó cómo se gestiona la relación con los clientes.",
+    "No se aporta información sobre recursos clave. Preguntar: ¿qué recursos son esenciales?",
+    "El diagnóstico no contiene datos sobre fuentes de ingreso.",
+    "Solo se indica una escasa colaboración externa, pero falta detalle. Pregunta necesaria: ¿con quién colaboran?",
+])
+def test_reconoce_las_formas_de_declarar_falta_de_informacion(texto):
+    c = caso("C01")
+    r = respuesta_buena(c)
+    r["lienzo_negocio"]["canales"] = texto
+    assert "canales" not in evaluar_caso(c, r)["insuficiencia"]["bloques_posiblemente_inventados"]
